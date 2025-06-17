@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeBudget - Simple Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            font-family: 'Poppins', Arial, sans-serif;
+            margin: 0;
+        }
+        .simple-home {
+            background: #fff;
+            padding: 2rem 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            text-align: center;
+            max-width: 350px;
+            width: 100%;
+        }
+        .simple-home h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #4f46e5;
+        }
+        .simple-home p {
+            color: #334155;
+            margin-bottom: 2rem;
+        }
+        .simple-home button {
+            background: #4f46e5;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin: 0.5rem;
+            width: 100%;
+        }
+        .simple-home button:hover {
+            background: #6366f1;
+        }
+        .simple-home .secondary-btn {
+            background: transparent;
+            color: #4f46e5;
+            border: 2px solid #4f46e5;
+        }
+        .simple-home .secondary-btn:hover {
+            background: #4f46e5;
+            color: #fff;
+        }
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .auth-form {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .auth-form h2 {
+            color: #4f46e5;
+            margin-bottom: 1.5rem;
+        }
+        .auth-form input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .auth-form button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #4f46e5;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+        }
+        .auth-form .close-btn {
+            background: #64748b;
+            margin-top: 1rem;
+        }
+        .auth-form .toggle-btn {
+            background: transparent;
+            color: #4f46e5;
+            border: none;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .error-message {
+            color: #ef4444;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .success-message {
+            color: #10b981;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="simple-home">
+        <h1>HomeBudget</h1>
+        <p>Track your family's expenses in ₹. Simple, private, and free.</p>
+        <button onclick="showLoginModal()">Login</button>
+        <button class="secondary-btn" onclick="showSignupModal()">Sign Up</button>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="auth-modal" id="loginModal">
+        <div class="auth-form">
+            <h2>Login</h2>
+            <div id="loginError" class="error-message" style="display: none;"></div>
+            <div id="loginSuccess" class="success-message" style="display: none;"></div>
+            <input type="text" id="loginUsername" placeholder="Username" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button onclick="login()">Login</button>
+            <button class="toggle-btn" onclick="toggleAuthForm('signup')">Don't have an account? Sign up</button>
+            <button class="close-btn" onclick="closeAuthModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="auth-modal" id="signupModal">
+        <div class="auth-form">
+            <h2>Sign Up</h2>
+            <div id="signupError" class="error-message" style="display: none;"></div>
+            <div id="signupSuccess" class="success-message" style="display: none;"></div>
+            <input type="text" id="signupUsername" placeholder="Username" required>
+            <input type="password" id="signupPassword" placeholder="Password (min 6 characters)" required>
+            <button onclick="signup()">Sign Up</button>
+            <button class="toggle-btn" onclick="toggleAuthForm('login')">Already have an account? Login</button>
+            <button class="close-btn" onclick="closeAuthModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script src="config.js"></script>
+    <script src="config.local.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+        // Get Firebase configuration from external file or use placeholder
+        const firebaseConfig = window.firebaseConfig || {
+            apiKey: "YOUR_API_KEY_HERE",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID",
+            measurementId: "YOUR_MEASUREMENT_ID"
+        };
+
+        // Check if configuration is properly set
+        if (firebaseConfig.apiKey === "YOUR_API_KEY_HERE" || firebaseConfig.apiKey === "YOUR_ACTUAL_API_KEY_HERE") {
+            console.error("Firebase configuration not properly set. Please create config.local.js with your Firebase credentials.");
+            document.body.innerHTML = `
+                <div style="text-align: center; padding: 2rem; font-family: Arial, sans-serif;">
+                    <h2>Configuration Required</h2>
+                    <p>Please set up your Firebase configuration before using this app.</p>
+                    <p>1. Copy config.local.js and fill in your Firebase credentials</p>
+                    <p>2. Make sure config.local.js is in the same directory as this HTML file</p>
+                    <p>3. Refresh the page</p>
+                </div>
+            `;
+            throw new Error("Firebase configuration not set");
+        }
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // Test Firebase connection
+        async function testFirebaseConnection() {
+            try {
+                console.log('Testing Firebase connection...');
+                const testRef = collection(db, "test");
+                await addDoc(testRef, { test: true, timestamp: new Date() });
+                console.log('Firebase connection successful');
+                return true;
+            } catch (error) {
+                console.error('Firebase connection failed:', error);
+                return false;
+            }
+        }
+
+        // Check if user is logged in
+        function checkAuth() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                window.location.href = 'dashboard.html';
+            }
+        }
+
+        // Global functions for auth
+        window.showLoginModal = function() {
+            document.getElementById('loginModal').style.display = 'flex';
+        };
+
+        window.showSignupModal = function() {
+            document.getElementById('signupModal').style.display = 'flex';
+        };
+
+        window.closeAuthModal = function() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('signupModal').style.display = 'none';
+            // Clear error messages
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('signupError').style.display = 'none';
+            document.getElementById('loginSuccess').style.display = 'none';
+            document.getElementById('signupSuccess').style.display = 'none';
+        };
+
+        window.toggleAuthForm = function(type) {
+            if (type === 'signup') {
+                document.getElementById('loginModal').style.display = 'none';
+                document.getElementById('signupModal').style.display = 'flex';
+            } else {
+                document.getElementById('signupModal').style.display = 'none';
+                document.getElementById('loginModal').style.display = 'flex';
+            }
+        };
+
+        window.login = async function() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            const successDiv = document.getElementById('loginSuccess');
+
+            if (!username || !password) {
+                errorDiv.textContent = 'Please fill in all fields';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                // Check if user exists in Firestore
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("username", "==", username));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    errorDiv.textContent = 'Username not found';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                const userDoc = querySnapshot.docs[0];
+                const userData = userDoc.data();
+
+                if (userData.password !== password) {
+                    errorDiv.textContent = 'Incorrect password';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                // Store user info in localStorage
+                localStorage.setItem('currentUser', JSON.stringify({
+                    id: userDoc.id,
+                    username: userData.username
+                }));
+
+                successDiv.textContent = 'Login successful! Redirecting to dashboard...';
+                successDiv.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } catch (error) {
+                console.error("Login error: ", error);
+                errorDiv.textContent = 'Login failed. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        };
+
+        window.signup = async function() {
+            const username = document.getElementById('signupUsername').value;
+            const password = document.getElementById('signupPassword').value;
+            const errorDiv = document.getElementById('signupError');
+            const successDiv = document.getElementById('signupSuccess');
+
+            if (!username || !password) {
+                errorDiv.textContent = 'Please fill in all fields';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 6) {
+                errorDiv.textContent = 'Password must be at least 6 characters';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (username.length < 3) {
+                errorDiv.textContent = 'Username must be at least 3 characters';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                console.log('Starting signup process for username:', username);
+                
+                // Test Firebase connection first
+                const isConnected = await testFirebaseConnection();
+                if (!isConnected) {
+                    errorDiv.textContent = 'Cannot connect to Firebase. Please check your internet connection and try again.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                
+                // Check if username already exists
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("username", "==", username));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    errorDiv.textContent = 'Username already exists';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                console.log('Username is available, creating user...');
+
+                // Create new user
+                const userRef = await addDoc(collection(db, "users"), {
+                    username: username,
+                    password: password,
+                    createdAt: new Date()
+                });
+
+                console.log('User created successfully with ID:', userRef.id);
+
+                successDiv.textContent = 'Account created successfully! Please login.';
+                successDiv.style.display = 'block';
+                
+                // Clear form and switch to login
+                document.getElementById('signupUsername').value = '';
+                document.getElementById('signupPassword').value = '';
+                
+                setTimeout(() => {
+                    closeAuthModal();
+                    showLoginModal();
+                }, 1500);
+            } catch (error) {
+                console.error("Signup error details:", error);
+                console.error("Error code:", error.code);
+                console.error("Error message:", error.message);
+                
+                if (error.code === 'permission-denied') {
+                    errorDiv.textContent = 'Firebase permissions error. Please check your Firestore rules.';
+                } else if (error.code === 'unavailable') {
+                    errorDiv.textContent = 'Firebase is unavailable. Please check your internet connection.';
+                } else if (error.code === 'not-found') {
+                    errorDiv.textContent = 'Firestore database not found. Please check your Firebase configuration.';
+                } else {
+                    errorDiv.textContent = `Signup failed: ${error.message}`;
+                }
+                errorDiv.style.display = 'block';
+            }
+        };
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('auth-modal')) {
+                closeAuthModal();
+            }
+        });
+
+        // Check auth on page load
+        checkAuth();
+    </script>
+</body>
+</html> 

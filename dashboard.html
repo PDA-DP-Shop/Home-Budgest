@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeBudget Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: #f8fafc;
+            font-family: 'Poppins', Arial, sans-serif;
+            margin: 0;
+        }
+        .dashboard-container {
+            max-width: 500px;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+        }
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .dashboard-header h1 {
+            color: #4f46e5;
+            font-size: 1.7rem;
+            margin-bottom: 0.5rem;
+        }
+        .dashboard-header p {
+            color: #334155;
+            margin-bottom: 0.5rem;
+        }
+        .total-expenses {
+            background: #f1f5f9;
+            color: #4f46e5;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        .expense-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+        .expense-form input, .expense-form select {
+            padding: 0.6rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        .expense-form button {
+            background: #4f46e5;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .expense-form button:hover {
+            background: #6366f1;
+        }
+        .expenses-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.97rem;
+        }
+        .expenses-table th, .expenses-table td {
+            padding: 0.5rem 0.3rem;
+            text-align: left;
+        }
+        .expenses-table th {
+            color: #4f46e5;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .expenses-table tr:not(:last-child) td {
+            border-bottom: 1px solid #f1f5f9;
+        }
+        @media (max-width: 600px) {
+            .dashboard-container {
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+                padding: 1rem 0.5rem 1.5rem 0.5rem;
+            }
+            .expenses-table th, .expenses-table td {
+                font-size: 0.93rem;
+                padding: 0.4rem 0.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>HomeBudget Dashboard</h1>
+            <p>Track your family's expenses in ₹</p>
+            <div id="userInfo" style="margin-top: 1rem; padding: 0.5rem; background: #f1f5f9; border-radius: 6px; font-size: 0.9rem;">
+                <!-- User info will be displayed here -->
+            </div>
+            <button onclick="logout()" style="margin-top: 1rem; background: #64748b; color: white; border: none; border-radius: 6px; padding: 0.5rem 1rem; font-size: 0.9rem; cursor: pointer;">Logout</button>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+            <div id="todayCard" style="background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">₹0</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">Today</div>
+            </div>
+            <div id="weekCard" style="background: linear-gradient(135deg, #10b981, #34d399); color: white; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">₹0</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">This Week</div>
+            </div>
+            <div id="monthCard" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">₹0</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">This Month</div>
+            </div>
+            <div id="yearCard" style="background: linear-gradient(135deg, #ef4444, #f87171); color: white; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">₹0</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">This Year</div>
+            </div>
+        </div>
+        
+        <div class="total-expenses" id="totalExpenses">Total Expenses: ₹0</div>
+        <form class="expense-form" id="expenseForm">
+            <input type="date" id="date" required>
+            <select id="category" required>
+                <option value="">Select Category</option>
+                <option>Fruits & Vegetables (ફળો અને શાકભાજી)</option>
+                <option>Grocery & Food (કરિયાણું અને ખોરાક)</option>
+                <option>Milk & Dairy (દૂધ અને દૂધની વસ્તુઓ)</option>
+                <option>Transport & Fuel (પરિવહન અને બળતણ)</option>
+                <option>Medical & Health (દવા અને સ્વાસ્થ્ય)</option>
+                <option>Education & Books (શિક્ષણ અને પુસ્તકો)</option>
+                <option>School Fees (શાળાની ફી)</option>
+                <option>House Rent (ઘરનું ભાડું)</option>
+                <option>Electricity Bill (વીજળીનો બિલ)</option>
+                <option>Water Bill (પાણીનો બિલ)</option>
+                <option>Gas Bill (ગેસનો બિલ)</option>
+                <option>Internet & Mobile (ઇન્ટરનેટ અને મોબાઇલ)</option>
+                <option>House Maintenance (ઘરની જાળવણી)</option>
+                <option>Cleaning & Services (સફાઈ અને સેવાઓ)</option>
+                <option>Kitchen Appliances (રસોડાના સાધનો)</option>
+                <option>Furniture & Home (ફર્નિચર અને ઘર)</option>
+                <option>Clothing & Fashion (કપડાં અને ફેશન)</option>
+                <option>Kids & Toys (બાળકો અને રમકડાં)</option>
+                <option>Entertainment (મનોરંજન)</option>
+                <option>Restaurant & Dining (રેસ્ટોરન્ટ અને ભોજન)</option>
+                <option>Travel & Vacation (પ્રવાસ અને રજા)</option>
+                <option>Insurance (વીમો)</option>
+                <option>Investment & Savings (નિવેશ અને બચત)</option>
+                <option>Gifts & Celebrations (ભેટ અને ઉજવણી)</option>
+                <option>Petrol & Vehicle (પેટ્રોલ અને વાહન)</option>
+                <option>Other (અન્ય)</option>
+            </select>
+            <input type="number" id="amount" placeholder="Amount (₹)" min="1" required>
+            <input type="text" id="note" placeholder="Note (optional)">
+            <button type="submit">Add Expense</button>
+        </form>
+        <table class="expenses-table" id="expensesTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Amount (₹)</th>
+                    <th>Note</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Expenses will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Edit Expense Modal -->
+    <div id="editModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: #fff; padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px;">
+            <h2 style="color: #4f46e5; margin-bottom: 1.5rem;">Edit Expense</h2>
+            <form id="editForm">
+                <input type="date" id="editDate" required style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 1rem; box-sizing: border-box;">
+                <select id="editCategory" required style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 1rem; box-sizing: border-box;">
+                    <option value="">Select Category</option>
+                    <option>Fruits & Vegetables (ફળો અને શાકભાજી)</option>
+                    <option>Grocery & Food (કરિયાણું અને ખોરાક)</option>
+                    <option>Milk & Dairy (દૂધ અને દૂધની વસ્તુઓ)</option>
+                    <option>Transport & Fuel (પરિવહન અને બળતણ)</option>
+                    <option>Medical & Health (દવા અને સ્વાસ્થ્ય)</option>
+                    <option>Education & Books (શિક્ષણ અને પુસ્તકો)</option>
+                    <option>School Fees (શાળાની ફી)</option>
+                    <option>House Rent (ઘરનું ભાડું)</option>
+                    <option>Electricity Bill (વીજળીનો બિલ)</option>
+                    <option>Water Bill (પાણીનો બિલ)</option>
+                    <option>Gas Bill (ગેસનો બિલ)</option>
+                    <option>Internet & Mobile (ઇન્ટરનેટ અને મોબાઇલ)</option>
+                    <option>House Maintenance (ઘરની જાળવણી)</option>
+                    <option>Cleaning & Services (સફાઈ અને સેવાઓ)</option>
+                    <option>Kitchen Appliances (રસોડાના સાધનો)</option>
+                    <option>Furniture & Home (ફર્નિચર અને ઘર)</option>
+                    <option>Clothing & Fashion (કપડાં અને ફેશન)</option>
+                    <option>Kids & Toys (બાળકો અને રમકડાં)</option>
+                    <option>Entertainment (મનોરંજન)</option>
+                    <option>Restaurant & Dining (રેસ્ટોરન્ટ અને ભોજન)</option>
+                    <option>Travel & Vacation (પ્રવાસ અને રજા)</option>
+                    <option>Insurance (વીમો)</option>
+                    <option>Investment & Savings (નિવેશ અને બચત)</option>
+                    <option>Gifts & Celebrations (ભેટ અને ઉજવણી)</option>
+                    <option>Petrol & Vehicle (પેટ્રોલ અને વાહન)</option>
+                    <option>Other (અન્ય)</option>
+                </select>
+                <input type="number" id="editAmount" placeholder="Amount (₹)" min="1" required style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 1rem; box-sizing: border-box;">
+                <input type="text" id="editNote" placeholder="Note (optional)" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 1rem; box-sizing: border-box;">
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" style="flex: 1; padding: 0.75rem; background: #4f46e5; color: #fff; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer;">Update</button>
+                    <button type="button" onclick="closeEditModal()" style="flex: 1; padding: 0.75rem; background: #64748b; color: #fff; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyChSRcUopyaosj9RYwglENWCMNsCkt1DkI",
+            authDomain: "home-bugest.firebaseapp.com",
+            projectId: "home-bugest",
+            storageBucket: "home-bugest.firebasestorage.app",
+            messagingSenderId: "549696400074",
+            appId: "1:549696400074:web:0bf0117470725959476233",
+            measurementId: "G-JDLD5VMYPW"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // DOM elements
+        const form = document.getElementById('expenseForm');
+        const tableBody = document.querySelector('#expensesTable tbody');
+        const totalExpenses = document.getElementById('totalExpenses');
+        const userInfo = document.getElementById('userInfo');
+
+        // Check authentication
+        function checkAuth() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return null;
+            }
+            return JSON.parse(currentUser);
+        }
+
+        // Display user info
+        function displayUserInfo(user) {
+            userInfo.innerHTML = `Welcome, <strong>${user.username}</strong>!`;
+        }
+
+        // Logout function
+        window.logout = function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        };
+
+        // Load expenses from Firebase for the current user
+        async function loadExpenses() {
+            const user = checkAuth();
+            if (!user) return;
+
+            try {
+                const expensesRef = collection(db, "expenses");
+                const q = query(expensesRef, where("userId", "==", user.id));
+                const querySnapshot = await getDocs(q);
+                const expenses = [];
+                querySnapshot.forEach((doc) => {
+                    expenses.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                renderExpenses(expenses);
+            } catch (error) {
+                console.error("Error loading expenses: ", error);
+                alert("Error loading expenses. Please try again.");
+            }
+        }
+
+        // Calculate time-based summaries
+        function calculateTimeSummaries(expenses) {
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            // Get start of week (Monday)
+            const startOfWeek = new Date(today);
+            const dayOfWeek = today.getDay();
+            const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            startOfWeek.setDate(diff);
+            startOfWeek.setHours(0, 0, 0, 0);
+            
+            // Get start of month
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            // Get start of year
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+            
+            let todayTotal = 0;
+            let weekTotal = 0;
+            let monthTotal = 0;
+            let yearTotal = 0;
+            
+            expenses.forEach(exp => {
+                const expDate = new Date(exp.date);
+                
+                // Today
+                if (exp.date === todayStr) {
+                    todayTotal += Number(exp.amount);
+                }
+                
+                // This week
+                if (expDate >= startOfWeek) {
+                    weekTotal += Number(exp.amount);
+                }
+                
+                // This month
+                if (expDate >= startOfMonth) {
+                    monthTotal += Number(exp.amount);
+                }
+                
+                // This year
+                if (expDate >= startOfYear) {
+                    yearTotal += Number(exp.amount);
+                }
+            });
+            
+            return { todayTotal, weekTotal, monthTotal, yearTotal };
+        }
+
+        // Update summary cards
+        function updateSummaryCards(summaries) {
+            document.getElementById('todayCard').querySelector('div').textContent = `₹${summaries.todayTotal}`;
+            document.getElementById('weekCard').querySelector('div').textContent = `₹${summaries.weekTotal}`;
+            document.getElementById('monthCard').querySelector('div').textContent = `₹${summaries.monthTotal}`;
+            document.getElementById('yearCard').querySelector('div').textContent = `₹${summaries.yearTotal}`;
+        }
+
+        // Render expenses in the table
+        function renderExpenses(expenses) {
+            tableBody.innerHTML = '';
+            let total = 0;
+            expenses.forEach(exp => {
+                total += Number(exp.amount);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${exp.date}</td>
+                    <td>${exp.category}</td>
+                    <td>₹${exp.amount}</td>
+                    <td>${exp.note || ''}</td>
+                    <td>
+                        <button onclick="editExpense('${exp.id}', '${exp.date}', '${exp.category}', ${exp.amount}, '${exp.note || ''}')" style="background: #4f46e5; color: white; border: none; border-radius: 4px; padding: 0.3rem 0.6rem; margin-right: 0.3rem; cursor: pointer; font-size: 0.8rem;">Edit</button>
+                        <button onclick="deleteExpense('${exp.id}')" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 0.3rem 0.6rem; cursor: pointer; font-size: 0.8rem;">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            totalExpenses.textContent = `Total Expenses: ₹${total}`;
+            
+            // Calculate and update time summaries
+            const summaries = calculateTimeSummaries(expenses);
+            updateSummaryCards(summaries);
+        }
+
+        // Edit expense function
+        window.editExpense = function(expenseId, date, category, amount, note) {
+            document.getElementById('editDate').value = date;
+            document.getElementById('editCategory').value = category;
+            document.getElementById('editAmount').value = amount;
+            document.getElementById('editNote').value = note;
+            
+            // Store expense ID for update
+            document.getElementById('editForm').setAttribute('data-expense-id', expenseId);
+            
+            // Show edit modal
+            document.getElementById('editModal').style.display = 'flex';
+        };
+
+        // Close edit modal
+        window.closeEditModal = function() {
+            document.getElementById('editModal').style.display = 'none';
+        };
+
+        // Delete expense function
+        window.deleteExpense = async function(expenseId) {
+            if (confirm('Are you sure you want to delete this expense?')) {
+                try {
+                    await deleteDoc(doc(db, "expenses", expenseId));
+                    loadExpenses(); // Reload the expenses
+                } catch (error) {
+                    console.error("Error deleting expense: ", error);
+                    alert("Error deleting expense. Please try again.");
+                }
+            }
+        };
+
+        // Handle edit form submission
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const expenseId = this.getAttribute('data-expense-id');
+            const date = document.getElementById('editDate').value;
+            const category = document.getElementById('editCategory').value;
+            const amount = document.getElementById('editAmount').value;
+            const note = document.getElementById('editNote').value;
+            
+            if (!date || !category || !amount) return;
+
+            try {
+                await updateDoc(doc(db, "expenses", expenseId), {
+                    date: date,
+                    category: category,
+                    amount: Number(amount),
+                    note: note,
+                    updatedAt: new Date()
+                });
+                
+                closeEditModal();
+                loadExpenses(); // Reload the expenses
+            } catch (error) {
+                console.error("Error updating expense: ", error);
+                alert("Error updating expense. Please try again.");
+            }
+        });
+
+        // Add new expense to Firebase
+        form.onsubmit = async function(e) {
+            e.preventDefault();
+            const user = checkAuth();
+            if (!user) return;
+
+            const date = document.getElementById('date').value;
+            const category = document.getElementById('category').value;
+            const amount = document.getElementById('amount').value;
+            const note = document.getElementById('note').value;
+            
+            if (!date || !category || !amount) return;
+
+            try {
+                await addDoc(collection(db, "expenses"), {
+                    userId: user.id,
+                    username: user.username,
+                    date: date,
+                    category: category,
+                    amount: Number(amount),
+                    note: note,
+                    createdAt: new Date()
+                });
+                
+                form.reset();
+                loadExpenses(); // Reload the expenses
+            } catch (error) {
+                console.error("Error adding expense: ", error);
+                alert("Error adding expense. Please try again.");
+            }
+        };
+
+        // Initialize dashboard
+        function initDashboard() {
+            const user = checkAuth();
+            if (user) {
+                displayUserInfo(user);
+                loadExpenses();
+            }
+        }
+
+        // Start the dashboard
+        initDashboard();
+    </script>
+</body>
+</html> 
