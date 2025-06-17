@@ -2,10 +2,6 @@
 
 A comprehensive home budget tracking application designed specifically for Indian families, featuring bilingual support (English/Gujarati) and Firebase integration for secure data storage.
 
-## 🔒 Security Notice
-
-**IMPORTANT**: This repository is designed to be safe for public GitHub hosting. All sensitive Firebase configuration has been moved to external files that are excluded from version control.
-
 ## ✨ Features
 
 - **Bilingual Support**: All expense categories in English and Gujarati
@@ -52,19 +48,13 @@ git clone https://github.com/PDA-DP-Shop/Home-Budgest.git
 cd Home-Budgest
 ```
 
-### 2. Set Up Firebase Configuration
-```bash
-node setup.js
-```
-
-### 3. Configure Your Firebase Credentials
+### 2. Set Up Firebase Project
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Create a new project or select existing one
 3. Enable Firestore Database
-4. Get your Firebase configuration
-5. Edit `config.local.js` and add your credentials
+4. Set up Authentication (optional, as we use custom auth)
 
-### 4. Start the Application
+### 3. Start the Application
 ```bash
 # Using Python (if available)
 python -m http.server 8000
@@ -83,36 +73,6 @@ npx http-server -p 8000
 2. Create a new project or select an existing one
 3. Enable Firestore Database
 4. Set up Authentication (optional, as we use custom auth)
-5. Get your Firebase configuration
-
-### Configuration Setup
-
-**⚠️ SECURITY CRITICAL**: Follow these steps exactly to keep your credentials secure.
-
-1. **Run the setup script**:
-   ```bash
-   node setup.js
-   ```
-
-2. **Edit `config.local.js`** and replace the placeholder values with your actual Firebase credentials:
-   ```javascript
-   const firebaseConfig = {
-       apiKey: "YOUR_ACTUAL_API_KEY_HERE",
-       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-       projectId: "YOUR_PROJECT_ID",
-       storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
-       messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-       appId: "YOUR_APP_ID",
-       measurementId: "YOUR_MEASUREMENT_ID"
-   };
-   ```
-
-3. **Verify `.gitignore`** contains:
-   ```
-   config.local.js
-   .env
-   .env.local
-   ```
 
 ### Firebase Security Rules
 
@@ -135,15 +95,6 @@ service cloud.firestore {
   }
 }
 ```
-
-## 🔐 Security Features
-
-- **No hardcoded credentials** in source code
-- **Environment-based configuration** support
-- **Gitignore protection** for sensitive files
-- **Input validation** and sanitization
-- **Secure authentication** system
-- **User data isolation** in Firestore
 
 ## 📱 Mobile Optimization
 
@@ -186,14 +137,6 @@ service cloud.firestore {
 }
 ```
 
-## 🚨 Important Security Notes
-
-1. **Never commit `config.local.js`** to version control
-2. **Use environment variables** in production
-3. **Implement proper password hashing** for production use
-4. **Set up Firebase security rules** properly
-5. **Regularly update dependencies** for security patches
-
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -218,7 +161,7 @@ If you encounter any issues:
 
 ## 🔄 Updates
 
-- **v2.0**: Added Gujarati translations and enhanced security
+- **v2.0**: Added Gujarati translations
 - **v1.0**: Initial release with basic functionality
 
 ---
