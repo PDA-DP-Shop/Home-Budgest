@@ -293,6 +293,8 @@
                         ...doc.data()
                     });
                 });
+                // Sort expenses by date (newest first)
+                expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
                 renderExpenses(expenses);
             } catch (error) {
                 console.error("Error loading expenses: ", error);
@@ -358,8 +360,7 @@
             document.getElementById('yearCard').querySelector('div').textContent = `₹${summaries.yearTotal}`;
         }
 
-        // Sort expenses by date (newest first)
-        expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
         
         // Render expenses in the table
         function renderExpenses(expenses) {
